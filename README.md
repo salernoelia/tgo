@@ -11,6 +11,11 @@ A minimal, high-performance and low-resource CLI tool for managing task lists in
 
 ## Quick Start
 
+Pre-built binaries for macOS, Linux, and Windows are available on the [Releases page](https://github.com/salernoelia/tgo/releases).
+
+
+## Building yourself
+
 ```sh
 ./tgo set-dir ~/Tasks
 ./tgo
@@ -30,7 +35,4 @@ go build -o tgo .
 sudo mv tgo /usr/local/bin/
 ```
 
-## Notes
 
-- Task lists are stored as `.json` files in your chosen folder.
-- Interactive mode lets you add, remove, and
