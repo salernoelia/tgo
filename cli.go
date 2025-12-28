@@ -18,7 +18,7 @@ Usage:
   tgo                      - Interactive task management
   tgo start <number>       - Start/stop task timer
   tgo done <number>        - Mark task complete
-  tgo set-folder <path>    - Configure task directory
+  tgo set-dir <path>    - Configure task directory
   tgo create-list <name>   - Create new task list
   tgo remove-list          - Remove task list
   tgo help                 - Show this help
@@ -32,7 +32,7 @@ Interactive Commands:
   q | quit        - Exit program
 
 Examples:
-  tgo set-folder ~/Tasks
+  tgo set-dir ~/Tasks
   tgo create-list "Sprint Planning"
   tgo
   tgo start 3
@@ -53,7 +53,7 @@ func runCLI() {
 
 	command := os.Args[1]
 	switch command {
-	case "set-folder":
+	case "set-dir":
 		handleSetFolder(config)
 	case "create-list":
 		handleCreateList(config)
@@ -74,7 +74,7 @@ func runCLI() {
 func runInteractiveMode(config *Config) {
 	if config.TaskDir == "" {
 		fmt.Println("🔧 No task directory configured")
-		fmt.Println("Use: tgo set-folder <path>")
+		fmt.Println("Use: tgo set-dir <path>")
 		return
 	}
 
@@ -247,7 +247,7 @@ func handleSetFolder(config *Config) {
 func handleCreateList(config *Config) {
 	if config.TaskDir == "" {
 		fmt.Println("❌ No task directory configured")
-		fmt.Println("Use: tgo set-folder <path>")
+		fmt.Println("Use: tgo set-dir <path>")
 		return
 	}
 
@@ -278,7 +278,7 @@ func handleCreateList(config *Config) {
 func handleRemoveList(config *Config) {
 	if config.TaskDir == "" {
 		fmt.Println("❌ No task directory configured")
-		fmt.Println("Use: tgo set-folder <path>")
+		fmt.Println("Use: tgo set-dir <path>")
 		return
 	}
 
@@ -430,12 +430,12 @@ func handleCreateFirstList(config *Config) {
 			fmt.Println("❌ List name cannot be empty")
 			return
 		}
-		
+
 		if err := createNewList(config.TaskDir, listName); err != nil {
 			fmt.Printf("❌ %v\n", err)
 			return
 		}
-		
+
 		fmt.Printf("✅ Created your first list: %s\n", listName)
 		fmt.Println("🚀 Starting interactive mode...")
 		time.Sleep(time.Second)
