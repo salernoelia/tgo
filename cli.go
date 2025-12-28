@@ -12,7 +12,8 @@ import (
 
 func printUsage() {
 	fmt.Print(`
-⏰ Enhanced Task CLI Manager
+  TGO - Task CLI Manager
+  ----------------------
 
 Usage:
   tgo                      - Interactive task management
@@ -66,21 +67,21 @@ func runCLI() {
 	case "help", "-h", "--help":
 		printUsage()
 	default:
-		fmt.Printf("❌ Unknown command: %s\n", command)
+		fmt.Printf("[!] Unknown command: %s\n", command)
 		printUsage()
 	}
 }
 
 func runInteractiveMode(config *Config) {
 	if config.TaskDir == "" {
-		fmt.Println("🔧 No task directory configured")
+		fmt.Println("[!] No task directory configured")
 		fmt.Println("Use: tgo set-dir <path>")
 		return
 	}
 
 	taskFiles, err := findTaskFiles(config.TaskDir)
 	if err != nil {
-		fmt.Printf("📋 No task lists found in: %s\n\n", config.TaskDir)
+		fmt.Printf("[i] No task lists found in: %s\n\n", config.TaskDir)
 		fmt.Println("Let's create your first task list!")
 		handleCreateFirstList(config)
 		return
@@ -88,17 +89,16 @@ func runInteractiveMode(config *Config) {
 
 	taskFile, err := selectTaskFile(config.TaskDir, taskFiles)
 	if err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	taskList, err := loadTasks(taskFile)
 	if err != nil {
-		fmt.Printf("❌ Error loading tasks: %v\n", err)
+		fmt.Printf("[!] Error loading tasks: %v\n", err)
 		return
 	}
 
-	clearScreen()
 	displayTaskList(taskList, filepath.Base(taskFile))
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -117,7 +117,6 @@ func runInteractiveMode(config *Config) {
 			break
 		}
 
-		clearScreen()
 		displayTaskList(taskList, filepath.Base(taskFile))
 	}
 }
@@ -145,7 +144,7 @@ func handleInteractiveCommand(input string, taskList *TaskList, taskFile string)
 		if taskNum, err := strconv.Atoi(input); err == nil {
 			handleToggleTimer(taskNum, taskList, taskFile)
 		} else {
-			fmt.Println("❌ Invalid command. Type a number, 'add / a <task>', 'remove / r <number>', 'done / d <number>', 'r' to return, or 'q' to quit")
+			fmt.Println("[!] Invalid command. Type a number, 'add / a <task>', 'remove / r <number>', 'done / d <number>', 'r' to return, or 'q' to quit")
 		}
 	}
 	return false
@@ -154,13 +153,13 @@ func handleInteractiveCommand(input string, taskList *TaskList, taskFile string)
 func handleAddTask(input string, taskList *TaskList, taskFile string) {
 	taskTitle := strings.TrimSpace(input[4:])
 	if taskTitle == "" {
-		fmt.Println("❌ Task title cannot be empty")
+		fmt.Println("[!] Task title cannot be empty")
 		return
 	}
 
 	addTask(taskList, taskTitle)
 	if err := saveTasks(taskFile, taskList); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 	}
 }
 
@@ -168,17 +167,17 @@ func handleRemoveTask(input string, taskList *TaskList, taskFile string) {
 	taskNumStr := strings.TrimSpace(input[7:])
 	taskNum, err := strconv.Atoi(taskNumStr)
 	if err != nil {
-		fmt.Printf("❌ '%s' is not a valid number\n", taskNumStr)
+		fmt.Printf("[!] '%s' is not a valid number\n", taskNumStr)
 		return
 	}
 
 	if err := removeTask(taskList, taskNum); err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	if err := saveTasks(taskFile, taskList); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 	}
 }
 
@@ -186,34 +185,34 @@ func handleDoneTask(input string, taskList *TaskList, taskFile string) {
 	taskNumStr := strings.TrimSpace(input[5:])
 	taskNum, err := strconv.Atoi(taskNumStr)
 	if err != nil {
-		fmt.Printf("❌ '%s' is not a valid number\n", taskNumStr)
+		fmt.Printf("[!] '%s' is not a valid number\n", taskNumStr)
 		return
 	}
 
 	if err := markTaskComplete(taskList, taskNum); err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	if err := saveTasks(taskFile, taskList); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 	}
 }
 
 func handleToggleTimer(taskNum int, taskList *TaskList, taskFile string) {
 	if err := toggleTaskTimer(taskList, taskNum); err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	if err := saveTasks(taskFile, taskList); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 	}
 }
 
 func handleSetFolder(config *Config) {
 	if len(os.Args) < 3 {
-		fmt.Println("❌ Folder path required")
+		fmt.Println("[!] Folder path required")
 		return
 	}
 
@@ -225,28 +224,28 @@ func handleSetFolder(config *Config) {
 
 	absDir, err := filepath.Abs(folder)
 	if err != nil {
-		fmt.Printf("❌ Invalid path: %v\n", err)
+		fmt.Printf("[!] Invalid path: %v\n", err)
 		return
 	}
 
 	if _, err := os.Stat(absDir); os.IsNotExist(err) {
-		fmt.Printf("❌ Directory not found: %s\n", absDir)
+		fmt.Printf("[!] Directory not found: %s\n", absDir)
 		return
 	}
 
 	config.TaskDir = absDir
 	if err := saveConfig(config); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 		return
 	}
 
-	fmt.Printf("✅ Task directory set: %s\n", absDir)
+	fmt.Printf("[+] Task directory set: %s\n", absDir)
 	showDirContents(absDir)
 }
 
 func handleCreateList(config *Config) {
 	if config.TaskDir == "" {
-		fmt.Println("❌ No task directory configured")
+		fmt.Println("[!] No task directory configured")
 		fmt.Println("Use: tgo set-dir <path>")
 		return
 	}
@@ -259,7 +258,7 @@ func handleCreateList(config *Config) {
 			listName = strings.TrimSpace(scanner.Text())
 		}
 		if listName == "" {
-			fmt.Println("❌ List name cannot be empty")
+			fmt.Println("[!] List name cannot be empty")
 			return
 		}
 	} else {
@@ -267,24 +266,24 @@ func handleCreateList(config *Config) {
 	}
 
 	if err := createNewList(config.TaskDir, listName); err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
-	fmt.Printf("✅ Created list: %s\n", listName)
+	fmt.Printf("[+] Created list: %s\n", listName)
 	showDirContents(config.TaskDir)
 }
 
 func handleRemoveList(config *Config) {
 	if config.TaskDir == "" {
-		fmt.Println("❌ No task directory configured")
+		fmt.Println("[!] No task directory configured")
 		fmt.Println("Use: tgo set-dir <path>")
 		return
 	}
 
 	taskFiles, err := findTaskFiles(config.TaskDir)
 	if err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		showDirContents(config.TaskDir)
 		return
 	}
@@ -294,15 +293,15 @@ func handleRemoveList(config *Config) {
 		scanner := bufio.NewScanner(os.Stdin)
 		if scanner.Scan() && strings.ToLower(scanner.Text()) == "y" {
 			if err := os.Remove(filepath.Join(config.TaskDir, taskFiles[0])); err != nil {
-				fmt.Printf("❌ Failed to remove: %v\n", err)
+				fmt.Printf("[!] Failed to remove: %v\n", err)
 				return
 			}
-			fmt.Printf("✅ Removed: %s\n", taskFiles[0])
+			fmt.Printf("[-] Removed: %s\n", taskFiles[0])
 		}
 		return
 	}
 
-	fmt.Printf("📋 Found %d task lists:\n\n", len(taskFiles))
+	fmt.Printf("[i] Found %d task lists:\n\n", len(taskFiles))
 	for i, file := range taskFiles {
 		displayName := strings.TrimSuffix(file, ".json")
 		fmt.Printf("%d. %s\n", i+1, displayName)
@@ -311,7 +310,7 @@ func handleRemoveList(config *Config) {
 	fmt.Printf("\nSelect list to remove (1-%d): ", len(taskFiles))
 	var choice int
 	if _, err := fmt.Scanf("%d", &choice); err != nil || choice < 1 || choice > len(taskFiles) {
-		fmt.Println("❌ Invalid selection")
+		fmt.Println("[!] Invalid selection")
 		return
 	}
 
@@ -320,100 +319,100 @@ func handleRemoveList(config *Config) {
 	scanner := bufio.NewScanner(os.Stdin)
 	if scanner.Scan() && strings.ToLower(scanner.Text()) == "y" {
 		if err := os.Remove(filepath.Join(config.TaskDir, selectedFile)); err != nil {
-			fmt.Printf("❌ Failed to remove: %v\n", err)
+			fmt.Printf("[!] Failed to remove: %v\n", err)
 			return
 		}
-		fmt.Printf("✅ Removed: %s\n", selectedFile)
+		fmt.Printf("[-] Removed: %s\n", selectedFile)
 	}
 }
 
 func handleStartTask(config *Config) {
 	if len(os.Args) < 3 {
-		fmt.Println("❌ Task number required")
+		fmt.Println("[!] Task number required")
 		return
 	}
 
 	taskNum, err := strconv.Atoi(os.Args[2])
 	if err != nil {
-		fmt.Printf("❌ '%s' is not a valid number\n", os.Args[2])
+		fmt.Printf("[!] '%s' is not a valid number\n", os.Args[2])
 		return
 	}
 
 	if config.TaskDir == "" {
-		fmt.Println("❌ No task directory configured")
+		fmt.Println("[!] No task directory configured")
 		return
 	}
 
 	taskFiles, err := findTaskFiles(config.TaskDir)
 	if err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	taskFile, err := selectTaskFile(config.TaskDir, taskFiles)
 	if err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	taskList, err := loadTasks(taskFile)
 	if err != nil {
-		fmt.Printf("❌ Load error: %v\n", err)
+		fmt.Printf("[!] Load error: %v\n", err)
 		return
 	}
 
 	if err := toggleTaskTimer(taskList, taskNum); err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	if err := saveTasks(taskFile, taskList); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 	}
 }
 
 func handleMarkDone(config *Config) {
 	if len(os.Args) < 3 {
-		fmt.Println("❌ Task number required")
+		fmt.Println("[!] Task number required")
 		return
 	}
 
 	taskNum, err := strconv.Atoi(os.Args[2])
 	if err != nil {
-		fmt.Printf("❌ '%s' is not a valid number\n", os.Args[2])
+		fmt.Printf("[!] '%s' is not a valid number\n", os.Args[2])
 		return
 	}
 
 	if config.TaskDir == "" {
-		fmt.Println("❌ No task directory configured")
+		fmt.Println("[!] No task directory configured")
 		return
 	}
 
 	taskFiles, err := findTaskFiles(config.TaskDir)
 	if err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	taskFile, err := selectTaskFile(config.TaskDir, taskFiles)
 	if err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	taskList, err := loadTasks(taskFile)
 	if err != nil {
-		fmt.Printf("❌ Load error: %v\n", err)
+		fmt.Printf("[!] Load error: %v\n", err)
 		return
 	}
 
 	if err := markTaskComplete(taskList, taskNum); err != nil {
-		fmt.Printf("❌ %v\n", err)
+		fmt.Printf("[!] %v\n", err)
 		return
 	}
 
 	if err := saveTasks(taskFile, taskList); err != nil {
-		fmt.Printf("❌ Save error: %v\n", err)
+		fmt.Printf("[!] Save error: %v\n", err)
 	}
 }
 
@@ -427,17 +426,17 @@ func handleCreateFirstList(config *Config) {
 	if scanner.Scan() {
 		listName := strings.TrimSpace(scanner.Text())
 		if listName == "" {
-			fmt.Println("❌ List name cannot be empty")
+			fmt.Println("[!] List name cannot be empty")
 			return
 		}
 
 		if err := createNewList(config.TaskDir, listName); err != nil {
-			fmt.Printf("❌ %v\n", err)
+			fmt.Printf("[!] %v\n", err)
 			return
 		}
 
-		fmt.Printf("✅ Created your first list: %s\n", listName)
-		fmt.Println("🚀 Starting interactive mode...")
+		fmt.Printf("[+] Created your first list: %s\n", listName)
+		fmt.Println("[>] Starting interactive mode...")
 		time.Sleep(time.Second)
 		runInteractiveMode(config)
 	}

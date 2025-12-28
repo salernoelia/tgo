@@ -11,11 +11,11 @@ func showDirContents(folder string) {
 	if err != nil {
 		return
 	}
-	
+
 	fmt.Printf("\nFiles in %s:\n", folder)
 	var taskFiles []string
 	var otherFiles []string
-	
+
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			if strings.HasSuffix(entry.Name(), ".json") {
@@ -25,21 +25,21 @@ func showDirContents(folder string) {
 			}
 		}
 	}
-	
+
 	if len(taskFiles) > 0 {
-		fmt.Println("  📋 Task lists:")
+		fmt.Println("  Task lists:")
 		for _, file := range taskFiles {
 			fmt.Printf("    - %s\n", file)
 		}
 	}
-	
+
 	if len(otherFiles) > 0 {
-		fmt.Println("  📄 Other files:")
+		fmt.Println("  Other files:")
 		for _, file := range otherFiles {
 			fmt.Printf("    - %s\n", file)
 		}
 	}
-	
+
 	if len(taskFiles) == 0 && len(otherFiles) == 0 {
 		fmt.Println("  (no files found)")
 	}
