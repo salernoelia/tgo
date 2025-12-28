@@ -246,7 +246,7 @@ func getTaskLines(taskList *TaskList, statuses ...TaskStatus) []string {
 			statusIcon = ">>>"
 			if task.ActiveStartTime != nil {
 				elapsed := time.Since(*task.ActiveStartTime)
-				timeInfo = fmt.Sprintf(" [Running: %s]", formatDuration(elapsed.Nanoseconds()))
+				timeInfo = fmt.Sprintf(" [Running]", formatDuration(elapsed.Nanoseconds()))
 			}
 		case StatusPending:
 			statusIcon = "[ ]"
@@ -308,7 +308,7 @@ func displayTasksByStatus(taskList *TaskList, statuses ...TaskStatus) {
 			statusIcon = ">>>"
 			if task.ActiveStartTime != nil {
 				elapsed := time.Since(*task.ActiveStartTime)
-				timeInfo = fmt.Sprintf(" [Running: %s]", formatDuration(elapsed.Nanoseconds()))
+				timeInfo = fmt.Sprintf(" [Running]", formatDuration(elapsed.Nanoseconds()))
 			}
 		case StatusPending:
 			statusIcon = "[ ]"
