@@ -99,25 +99,57 @@ func runInteractiveMode(config *Config) {
 		return
 	}
 
-	displayTaskList(taskList, filepath.Base(taskFile))
+	runInteractiveLoop(taskList, taskFile)
+}
 
-	scanner := bufio.NewScanner(os.Stdin)
+func runInteractiveLoop(taskList *TaskList, taskFile string) {
+	spinnerFrame := 0
+	displayTaskListWithSpinner(taskList, filepath.Base(taskFile), spinnerFrame)
+
+	inputChan := make(chan string)
+	quitChan := make(chan bool)
+
+	// Goroutine to read input
+	go func() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for {
+			fmt.Print("\n> ")
+			if !scanner.Scan() {
+				quitChan <- true
+				return
+			}
+			inputChan <- scanner.Text()
+		}
+	}()
+
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
 	for {
-		fmt.Print("\n> ")
-		if !scanner.Scan() {
-			break
-		}
+		select {
+		case <-ticker.C:
+			// Update display if there's an active task
+			if hasActiveTask(taskList) {
+				spinnerFrame++
+				displayTaskListWithSpinner(taskList, filepath.Base(taskFile), spinnerFrame)
+			}
 
-		input := strings.TrimSpace(scanner.Text())
-		if input == "" {
-			continue
-		}
+		case input := <-inputChan:
+			input = strings.TrimSpace(input)
+			if input == "" {
+				continue
+			}
 
-		if handleInteractiveCommand(input, taskList, taskFile) {
-			break
-		}
+			if handleInteractiveCommand(input, taskList, taskFile) {
+				return
+			}
 
-		displayTaskList(taskList, filepath.Base(taskFile))
+			spinnerFrame = 0
+			displayTaskListWithSpinner(taskList, filepath.Base(taskFile), spinnerFrame)
+
+		case <-quitChan:
+			return
+		}
 	}
 }
 

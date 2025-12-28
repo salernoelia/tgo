@@ -171,6 +171,10 @@ func createNewList(folder string, listName string) error {
 }
 
 func displayTaskList(taskList *TaskList, fileName string) {
+	displayTaskListWithSpinner(taskList, fileName, 0)
+}
+
+func displayTaskListWithSpinner(taskList *TaskList, fileName string, spinnerFrame int) {
 	listName := strings.TrimSuffix(fileName, ".json")
 
 	var lines []string
@@ -204,21 +208,21 @@ func displayTaskList(taskList *TaskList, fileName string) {
 	if activeCount > 0 {
 		lines = append(lines, "  ACTIVE")
 		lines = append(lines, "  ------")
-		lines = append(lines, getTaskLines(taskList, StatusActive)...)
+		lines = append(lines, getTaskLinesWithSpinner(taskList, spinnerFrame, StatusActive)...)
 		lines = append(lines, "")
 	}
 
 	if pendingCount > 0 {
 		lines = append(lines, "  PENDING")
 		lines = append(lines, "  -------")
-		lines = append(lines, getTaskLines(taskList, StatusPending, StatusPaused)...)
+		lines = append(lines, getTaskLinesWithSpinner(taskList, spinnerFrame, StatusPending, StatusPaused)...)
 		lines = append(lines, "")
 	}
 
 	if doneCount > 0 {
 		lines = append(lines, "  DONE")
 		lines = append(lines, "  ----")
-		lines = append(lines, getTaskLines(taskList, StatusDone)...)
+		lines = append(lines, getTaskLinesWithSpinner(taskList, spinnerFrame, StatusDone)...)
 		lines = append(lines, "")
 	}
 
@@ -227,6 +231,13 @@ func displayTaskList(taskList *TaskList, fileName string) {
 }
 
 func getTaskLines(taskList *TaskList, statuses ...TaskStatus) []string {
+	return getTaskLinesWithSpinner(taskList, 0, statuses...)
+}
+
+func getTaskLinesWithSpinner(taskList *TaskList, spinnerFrame int, statuses ...TaskStatus) []string {
+	spinnerChars := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	spinner := spinnerChars[spinnerFrame%len(spinnerChars)]
+
 	statusMap := make(map[TaskStatus]bool)
 	for _, status := range statuses {
 		statusMap[status] = true
@@ -243,9 +254,11 @@ func getTaskLines(taskList *TaskList, statuses ...TaskStatus) []string {
 
 		switch task.Status {
 		case StatusActive:
-			statusIcon = ">>>"
+			statusIcon = fmt.Sprintf("%s", spinner)
 			if task.ActiveStartTime != nil {
-				timeInfo = "[Running]"
+				elapsed := time.Since(*task.ActiveStartTime).Nanoseconds()
+				totalElapsed := task.TotalDuration + elapsed
+				timeInfo = fmt.Sprintf(" [Running: %s]", formatDuration(totalElapsed))
 			}
 		case StatusPending:
 			statusIcon = "[ ]"
@@ -450,4 +463,13 @@ func markTaskComplete(taskList *TaskList, index int) error {
 
 	fmt.Printf("[x] Completed: %s%s\n", task.Title, totalTime)
 	return nil
+}
+
+func hasActiveTask(taskList *TaskList) bool {
+	for i := range taskList.Items {
+		if taskList.Items[i].Status == StatusActive {
+			return true
+		}
+	}
+	return false
 }
