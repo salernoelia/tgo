@@ -103,53 +103,33 @@ func runInteractiveMode(config *Config) {
 }
 
 func runInteractiveLoop(taskList *TaskList, taskFile string) {
-	spinnerFrame := 0
-	displayTaskListWithSpinner(taskList, filepath.Base(taskFile), spinnerFrame)
+	reader := bufio.NewReader(os.Stdin)
+	spinnerStart := time.Now()
 
-	inputChan := make(chan string)
-	quitChan := make(chan bool)
-
-	// Goroutine to read input
-	go func() {
-		scanner := bufio.NewScanner(os.Stdin)
-		for {
-			fmt.Print("\n> ")
-			if !scanner.Scan() {
-				quitChan <- true
-				return
-			}
-			inputChan <- scanner.Text()
-		}
-	}()
-
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
+	render := func() {
+		frame := int(time.Since(spinnerStart) / (150 * time.Millisecond))
+		displayTaskListWithSpinner(taskList, filepath.Base(taskFile), frame)
+		fmt.Print("\n> ")
+	}
 
 	for {
-		select {
-		case <-ticker.C:
-			// Update display if there's an active task
-			if hasActiveTask(taskList) {
-				spinnerFrame++
-				displayTaskListWithSpinner(taskList, filepath.Base(taskFile), spinnerFrame)
-			}
-
-		case input := <-inputChan:
-			input = strings.TrimSpace(input)
-			if input == "" {
-				continue
-			}
-
-			if handleInteractiveCommand(input, taskList, taskFile) {
-				return
-			}
-
-			spinnerFrame = 0
-			displayTaskListWithSpinner(taskList, filepath.Base(taskFile), spinnerFrame)
-
-		case <-quitChan:
+		render()
+		line, err := reader.ReadString('\n')
+		if err != nil {
 			return
 		}
+
+		input := strings.TrimSpace(line)
+		if input == "" {
+			continue
+		}
+
+		if handleInteractiveCommand(input, taskList, taskFile) {
+			return
+		}
+
+		// restart spinner cycle after each command
+		spinnerStart = time.Now()
 	}
 }
 
@@ -161,17 +141,17 @@ func handleInteractiveCommand(input string, taskList *TaskList, taskFile string)
 		runCLI()
 		return true
 	case strings.HasPrefix(input, "add "):
-		handleAddTask(input, taskList, taskFile)
+		handleAddTask(strings.TrimSpace(input[4:]), taskList, taskFile)
 	case strings.HasPrefix(input, "a "):
-		handleAddTask(input, taskList, taskFile)
+		handleAddTask(strings.TrimSpace(input[2:]), taskList, taskFile)
 	case strings.HasPrefix(input, "remove "):
-		handleRemoveTask(input, taskList, taskFile)
+		handleRemoveTask(strings.TrimSpace(input[7:]), taskList, taskFile)
 	case strings.HasPrefix(input, "r "):
-		handleRemoveTask(input, taskList, taskFile)
+		handleRemoveTask(strings.TrimSpace(input[2:]), taskList, taskFile)
 	case strings.HasPrefix(input, "done "):
-		handleDoneTask(input, taskList, taskFile)
+		handleDoneTask(strings.TrimSpace(input[5:]), taskList, taskFile)
 	case strings.HasPrefix(input, "d "):
-		handleDoneTask(input, taskList, taskFile)
+		handleDoneTask(strings.TrimSpace(input[2:]), taskList, taskFile)
 	default:
 		if taskNum, err := strconv.Atoi(input); err == nil {
 			handleToggleTimer(taskNum, taskList, taskFile)
@@ -182,8 +162,7 @@ func handleInteractiveCommand(input string, taskList *TaskList, taskFile string)
 	return false
 }
 
-func handleAddTask(input string, taskList *TaskList, taskFile string) {
-	taskTitle := strings.TrimSpace(input[4:])
+func handleAddTask(taskTitle string, taskList *TaskList, taskFile string) {
 	if taskTitle == "" {
 		fmt.Println("[!] Task title cannot be empty")
 		return
@@ -195,8 +174,7 @@ func handleAddTask(input string, taskList *TaskList, taskFile string) {
 	}
 }
 
-func handleRemoveTask(input string, taskList *TaskList, taskFile string) {
-	taskNumStr := strings.TrimSpace(input[7:])
+func handleRemoveTask(taskNumStr string, taskList *TaskList, taskFile string) {
 	taskNum, err := strconv.Atoi(taskNumStr)
 	if err != nil {
 		fmt.Printf("[!] '%s' is not a valid number\n", taskNumStr)
@@ -213,8 +191,7 @@ func handleRemoveTask(input string, taskList *TaskList, taskFile string) {
 	}
 }
 
-func handleDoneTask(input string, taskList *TaskList, taskFile string) {
-	taskNumStr := strings.TrimSpace(input[5:])
+func handleDoneTask(taskNumStr string, taskList *TaskList, taskFile string) {
 	taskNum, err := strconv.Atoi(taskNumStr)
 	if err != nil {
 		fmt.Printf("[!] '%s' is not a valid number\n", taskNumStr)
