@@ -24,7 +24,7 @@ func loadConfig() (*Config, error) {
 		}
 		return nil, err
 	}
-	
+
 	var config Config
 	err = json.Unmarshal(data, &config)
 	return &config, err

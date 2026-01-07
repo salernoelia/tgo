@@ -128,7 +128,6 @@ func runInteractiveLoop(taskList *TaskList, taskFile string) {
 			return
 		}
 
-		// restart spinner cycle after each command
 		spinnerStart = time.Now()
 	}
 }

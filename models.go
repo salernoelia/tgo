@@ -5,15 +5,15 @@ import (
 )
 
 type Task struct {
-	ID               int64      `json:"id"`
-	Title            string     `json:"title"`
-	Status           TaskStatus `json:"status"`
-	Comment          string     `json:"comment"`
-	Sessions         []Session  `json:"sessions"`
-	TotalDuration    int64      `json:"total_duration"`
-	ActiveStartTime  *time.Time `json:"active_start_time,omitempty"`
-	CompletedAt      *time.Time `json:"completed_at,omitempty"`
-	CreatedAt        time.Time  `json:"created_at"`
+	ID              int64      `json:"id"`
+	Title           string     `json:"title"`
+	Status          TaskStatus `json:"status"`
+	Comment         string     `json:"comment"`
+	Sessions        []Session  `json:"sessions"`
+	TotalDuration   int64      `json:"total_duration"`
+	ActiveStartTime *time.Time `json:"active_start_time,omitempty"`
+	CompletedAt     *time.Time `json:"completed_at,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
 }
 
 type Session struct {
@@ -32,8 +32,8 @@ const (
 )
 
 type TaskList struct {
-	Title     string `json:"title"`
-	Items     []Task `json:"items"`
+	Title     string    `json:"title"`
+	Items     []Task    `json:"items"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
